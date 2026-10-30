@@ -1,0 +1,5 @@
+# Desenvolvimento, testes e simulador de tráfego (o CI deve instalar este arquivo)
+-r requirements.txt
+pytest
+httpx
+ruff

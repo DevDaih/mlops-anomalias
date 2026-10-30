@@ -82,9 +82,14 @@ Docker e Docker Compose. No GitHub Codespaces, o `devcontainer.json` já instala
 
 ### Subir o stack completo
 
+Crie o arquivo `.env` com a senha do Grafana (ele está no `.gitignore` e **nunca** deve ser commitado):
+
 ```bash
+cp .env.example .env   # edite e troque o placeholder por uma senha sua
 docker compose up -d --build
 ```
+
+O compose se recusa a subir se `GF_SECURITY_ADMIN_PASSWORD` não estiver definida. A imagem da API treina um modelo na build (seed 42, dados sintéticos), então não precisa de volume nem de treino prévio. Limites de memória: api 256m, prometheus 256m, grafana 256m, alertmanager 64m; o Prometheus guarda 2 dias de dados.
 
 | Serviço      | Porta | Endereço local           |
 |--------------|-------|--------------------------|
@@ -93,12 +98,12 @@ docker compose up -d --build
 | Grafana      | 3000  | http://localhost:3000    |
 | Alertmanager | 9093  | http://localhost:9093    |
 
-No Codespaces, acesse pela aba **Ports**. A senha do Grafana é definida pela variável de ambiente `GF_SECURITY_ADMIN_PASSWORD`.
+No Codespaces, acesse pela aba **Ports**. No Grafana, entre com o usuário `admin` e a senha do `.env`; acesso anônimo e cadastro estão desligados. O datasource (`uid: prometheus`) e o dashboard **Saúde do Modelo** são provisionados automaticamente.
 
 ### Treinar um novo modelo
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # runtime + pytest, httpx, ruff
 pip install -e .
 python -m anomalias.train --n-samples 5000 --contamination 0.05 --seed 42
 ```
@@ -116,12 +121,19 @@ curl -X POST http://localhost:8000/predict \
 ### Simular tráfego (normal e com drift)
 
 ```bash
-# tráfego normal por 3 minutos, 20 req/s
-python scripts/simular_trafego.py --modo normal --duracao 180 --rps 20
+# tráfego normal (~5% de anomalias), 60 s a 10 req/s
+python scripts/simular_trafego.py --mode normal --duration 60 --rps 10
 
-# tráfego com drift gradual na média de algumas features
-python scripts/simular_trafego.py --modo drift --duracao 180 --rps 20
+# drift gradual: temperature desliza até 1,5 desvio em 30 s (use --features current para somar outra)
+python scripts/simular_trafego.py --mode drift --duration 90 --rps 10 --ramp 30 --shift 1.5
+
+# rajada de anomalias (40%) no terço central da duração
+python scripts/simular_trafego.py --mode burst --duration 90 --rps 10 --anomaly-rate 0.4
 ```
+
+O simulador lê as `reference_stats` de `GET /model`, gera os registros em torno delas e, ao final, imprime enviados, erros e latência p50/p95 medida no cliente. Os parâmetros são `--url`, `--mode`, `--duration`, `--rps`, `--seed`, `--ramp`, `--shift`, `--features` e `--anomaly-rate`.
+
+> **Capacidade:** cada requisição executa duas travessias das 200 árvores (~36 ms), então um worker satura perto de 25 req/s. Acima disso a latência explode e o alerta `LatenciaP95Alta` dispara de verdade.
 
 ### Rodar os testes e o lint
 

@@ -1,0 +1,27 @@
+# Sem integração externa: os alertas ficam visíveis na UI (http://localhost:9093).
+route:
+  receiver: default
+  group_by: [alertname]
+  group_wait: 5s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: default
+
+# Um alerta crítico de drift silencia o de aviso equivalente
+inhibit_rules:
+  - source_matchers: [alertname = "DriftCritico"]
+    target_matchers: [alertname = "DriftAlto"]
+
+# Para notificar no Discord (Alertmanager >= 0.25), crie um webhook no canal e
+# troque o receiver acima por:
+#
+# receivers:
+#   - name: default
+#     discord_configs:
+#       - webhook_url: "https://discord.com/api/webhooks/<id>/<token>"
+#         send_resolved: true
+#
+# O webhook é um segredo: não commite a URL. Prefira webhook_url_file apontando
+# para um arquivo montado no container (fora do git).

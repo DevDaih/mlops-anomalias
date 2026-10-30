@@ -1,0 +1,70 @@
+# Calibração (dados sintéticos, tráfego normal com 5% de anomalias):
+#   - drift basal medido: p99 = 0,20 e máximo = 0,226
+#   - anomaly_ratio basal esperado: ~0,05
+# Os limiares ficam bem acima do basal para não disparar com tráfego normal.
+groups:
+  - name: anomaly-api
+    rules:
+      - alert: DriftAlto
+        expr: anomaly_api_drift_score_max > 0.5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Drift alto nos dados de entrada"
+          description: >-
+            drift_score_max = {{ $value | printf "%.3f" }} (limiar 0,5).
+            Basal medido: p99 0,20 e máximo 0,226 com 5% de anomalias; 0,5 é
+            mais que o dobro do máximo basal.
+
+      - alert: DriftCritico
+        expr: anomaly_api_drift_score_max > 1.0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Drift crítico: média dos dados a mais de 1 desvio do treino"
+          description: >-
+            drift_score_max = {{ $value | printf "%.3f" }} (limiar 1,0).
+            Basal medido: p99 0,20 e máximo 0,226 com 5% de anomalias.
+            Considere retreinar o modelo.
+
+      - alert: TaxaAnomaliaAlta
+        expr: anomaly_api_anomaly_ratio > 0.15
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taxa de anomalias acima do esperado"
+          description: >-
+            anomaly_ratio = {{ $value | printf "%.3f" }} (limiar 0,15).
+            Basal esperado: ~0,05 (5% de anomalias); 0,15 é o triplo.
+
+      # Sem tráfego, rate() dá 0/0 e histogram_quantile retorna NaN. Em PromQL
+      # qualquer comparação com NaN é falsa, então a série some do resultado e o
+      # alerta não dispara.
+      - alert: LatenciaP95Alta
+        expr: >-
+          histogram_quantile(0.95,
+            sum by (le) (rate(anomaly_api_request_latency_seconds_bucket{endpoint="/predict"}[1m]))
+          ) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência p95 de /predict acima de 200 ms"
+          description: >-
+            p95 de /predict = {{ $value | humanizeDuration }} (limiar 200 ms).
+            Só avalia quando há tráfego; sem requisições o resultado é NaN e
+            o alerta não dispara.
+
+      - alert: ApiFora
+        expr: up{job="anomaly-api"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "API fora do ar"
+          description: >-
+            O Prometheus não consegue coletar {{ $labels.instance }}
+            (up = {{ $value }}) há mais de 30 s.
