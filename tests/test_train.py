@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from anomalias import model_store
-from anomalias.data import FEATURES, STDS
-from anomalias.train import main, train
+from anomalias.data import FEATURES, STDS, generate_dataset
+from anomalias.train import main, predict_labels, score_and_label, train
 
 MIN_F1 = 0.80
 MIN_AUC = 0.90
@@ -47,3 +47,12 @@ def test_cli_saves_versioned_model(tmp_path, capsys):
     _, meta = model_store.load_current(tmp_path)
     assert meta["version"] == 2
     assert json.loads((tmp_path / "model_v1.json").read_text())["hyperparams"]["n_estimators"] == 50
+
+
+def test_score_and_label_matches_predict_and_score_samples():
+    model, _ = train(n_samples=2000, seed=42)
+    X, _ = generate_dataset(1000, 0.05, seed=7)
+    scores, labels = score_and_label(model, X)
+    np.testing.assert_array_equal(labels, predict_labels(model, X))
+    np.testing.assert_array_equal(scores, -model.score_samples(X))
+    assert 0 < labels.sum() < len(X)

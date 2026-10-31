@@ -33,6 +33,17 @@ def predict_labels(model: IsolationForest, X: np.ndarray) -> np.ndarray:
     return (model.predict(X) == -1).astype(int)
 
 
+def score_and_label(model: IsolationForest, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Retorna (scores, rótulos) percorrendo as árvores uma única vez.
+
+    scores = -score_samples (maior = mais anômalo). O rótulo é 1 (anomalia) quando
+    score_samples - offset_ < 0, o mesmo critério de model.predict, que internamente
+    chama decision_function. Chamar predict e score_samples separados dobra o custo.
+    """
+    raw = model.score_samples(X)
+    return -raw, ((raw - model.offset_) < 0).astype(int)
+
+
 def train(
     n_samples: int = 5000,
     contamination: float = 0.05,

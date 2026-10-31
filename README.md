@@ -133,7 +133,7 @@ python scripts/simular_trafego.py --mode burst --duration 90 --rps 10 --anomaly-
 
 O simulador lê as `reference_stats` de `GET /model`, gera os registros em torno delas e, ao final, imprime enviados, erros e latência p50/p95 medida no cliente. Os parâmetros são `--url`, `--mode`, `--duration`, `--rps`, `--seed`, `--ramp`, `--shift`, `--features` e `--anomaly-rate`.
 
-> **Capacidade:** cada requisição executa duas travessias das 200 árvores (~36 ms), então um worker satura perto de 25 req/s. Acima disso a latência explode e o alerta `LatenciaP95Alta` dispara de verdade.
+> **Capacidade:** cada chamada a `/predict` custa ~17 ms fixos, quase independente do tamanho do lote (o `score_samples` do scikit-learn tem overhead por árvore). Um worker sustenta, portanto, algo na casa de 50 req/s de registros únicos; lotes (até 1000 registros por requisição) custam ~0,2 ms/registro. Acima da capacidade a latência explode e o alerta `LatenciaP95Alta` dispara de verdade.
 
 ### Rodar os testes e o lint
 

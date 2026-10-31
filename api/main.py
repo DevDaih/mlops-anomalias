@@ -28,7 +28,7 @@ from pydantic import BaseModel
 
 from anomalias.data import FEATURES
 from anomalias.model_store import load_current
-from anomalias.train import predict_labels
+from anomalias.train import score_and_label
 from api.metrics import ApiMetrics, MetricsMiddleware
 from api.schemas import HealthResponse, ModelInfo, Prediction, PredictRequest, PredictResponse
 
@@ -120,11 +120,8 @@ def predict(payload: PredictRequest, request: Request) -> PredictResponse:  # ty
     records: list[BaseModel] = payload if isinstance(payload, list) else [payload]
     X = np.array([[getattr(r, name) for name in FEATURES] for r in records], dtype=float)
 
-    labels = predict_labels(model, X)
-    # score_samples é maior para pontos normais; negamos para que maior = mais anômalo,
-    # a mesma convenção da roc_auc do treino. O modelo marca anomalia quando
-    # anomaly_score > -model.offset_ (limiar definido pela contamination).
-    scores = -model.score_samples(X)
+    # Uma única passada pelas árvores: score (maior = mais anômalo) e rótulo derivado dele
+    scores, labels = score_and_label(model, X)
 
     request.app.state.metrics.record_predictions(X, labels)
 
