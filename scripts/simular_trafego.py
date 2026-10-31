@@ -5,8 +5,9 @@ Lê as reference_stats de GET /model e gera registros em torno delas:
     normal  ~5% de anomalias injetadas (generate_dataset, seed diferente da do treino)
     drift   a média da temperature (e de --features) desliza em rampa até --shift
             desvios, ao longo de --ramp segundos
-    burst   tráfego normal com rajada de anomalias (--anomaly-rate) no terço
-            central da duração
+    burst   tráfego normal com rajada de anomalias (--anomaly-rate), por padrão no
+            terço central da duração; --burst-start e --burst-duration (segundos)
+            escolhem outro intervalo
 
 Exemplo:
     python scripts/simular_trafego.py --mode drift --duration 90 --rps 20
@@ -49,6 +50,8 @@ def build_records(
     shift: float = 1.5,
     drift_features: tuple[str, ...] = (),
     anomaly_rate: float = 0.4,
+    burst_start: float | None = None,
+    burst_duration: float | None = None,
 ) -> np.ndarray:
     """Gera n registros (n x len(FEATURES)), um por requisição, em ordem de envio."""
     X, _ = generate_dataset(n, BASE_CONTAMINATION, seed)
@@ -61,7 +64,9 @@ def build_records(
             j = FEATURES.index(name)
             X[:, j] += frac * shift * reference_stats[name]["std"]
     elif mode == "burst":
-        in_burst = (t >= t[-1] / 3) & (t < 2 * t[-1] / 3)
+        start = t[-1] / 3 if burst_start is None else burst_start
+        length = t[-1] / 3 if burst_duration is None else burst_duration
+        in_burst = (t >= start) & (t < start + length)
         # Pool com a taxa alta de anomalias; entra no lugar dos registros da rajada
         burst_pool, _ = generate_dataset(n, anomaly_rate, seed + 1)
         X[in_burst] = to_reference(burst_pool, reference_stats)[in_burst]
@@ -107,6 +112,8 @@ async def run(args: argparse.Namespace) -> int:
             args.shift,
             features,
             args.anomaly_rate,
+            args.burst_start,
+            args.burst_duration,
         )
         print(f"modo={args.mode} duração={args.duration}s rps={args.rps} registros={n}")
 
@@ -144,12 +151,25 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--shift", type=float, default=1.5, help="drift: desvios do deslocamento final")
     p.add_argument("--features", default="", help="drift: outras features, separadas por vírgula")
     p.add_argument("--anomaly-rate", type=float, default=0.4, help="burst: taxa na rajada")
+    p.add_argument(
+        "--burst-start", type=float, default=None, help="burst: início da rajada (s); padrão 1/3"
+    )
+    p.add_argument(
+        "--burst-duration",
+        type=float,
+        default=None,
+        help="burst: duração da rajada (s); padrão 1/3 da duração total",
+    )
     args = p.parse_args(argv)
 
     if args.duration <= 0 or args.rps <= 0:
         p.error("--duration e --rps devem ser positivos")
     if not 0 <= args.anomaly_rate < 0.5:
         p.error("--anomaly-rate deve estar em [0, 0.5)")
+    if (args.burst_start is not None and args.burst_start < 0) or (
+        args.burst_duration is not None and args.burst_duration <= 0
+    ):
+        p.error("--burst-start deve ser >= 0 e --burst-duration positivo")
     unknown = [f for f in args.features.split(",") if f and f not in FEATURES]
     if unknown:
         p.error(f"features desconhecidas: {unknown}; válidas: {FEATURES}")
