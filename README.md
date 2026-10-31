@@ -7,6 +7,18 @@ Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem nenhum p
 > ⚠️ **Aviso sobre os dados**
 > Todos os dados deste projeto são **sintéticos**, gerados por código em `src/anomalias/data.py`. Eles simulam leituras de sensores industriais (`temperature` em °C, `pressure` em bar, `vibration` em mm/s e `current` em A) com anomalias injetadas de forma controlada. Como os rótulos das anomalias são conhecidos, é possível medir a qualidade do modelo, mas os números refletem esse cenário simulado, **não um ambiente de produção real**.
 
+**Resumo**
+
+- **O que é:** um detector de anomalias (`IsolationForest`, dados sintéticos) servido por uma API FastAPI e monitorado com Prometheus, Grafana e Alertmanager.
+- **Drift:** nos testes com tráfego simulado, o drift subiu a ~1,5 desvio enquanto a taxa de anomalias ficou em ~5%, e só os alertas de drift dispararam.
+- **Alertas:** `DriftAlto` disparou em 105 s e `DriftCritico` em 135 s, e o crítico inibiu o aviso.
+- **Capacidade:** com 1 worker, 20 req/s foram sustentados por 60 s com p95 de ~41 ms no servidor; a 40 req/s mantidos por 2 min ou mais, a API deixou de completar `/predict`.
+- **Detalhes:** [Achados](#achados) e [Limitações](#limitações).
+
+![Painel Saúde do Modelo no Grafana durante uma rodada de drift](docs/img/grafana-drift.png)
+
+*Painel Saúde do Modelo no Grafana durante uma rodada de drift: a `temperature` sobe até ~1,5 desvio (linhas de limiar em 0,5 e 1,0), a taxa de anomalias fica abaixo de 8% e `DriftAlto` e `DriftCritico` aparecem firing.*
+
 ## Objetivo
 
 - Treinar um modelo `IsolationForest` (scikit-learn) em segundos e medir sua qualidade com precisão, recall, F1 e ROC-AUC sobre anomalias conhecidas.
@@ -70,7 +82,7 @@ models/             artefatos versionados (model_vN.joblib + model_vN.json)
 monitoring/         configuração do Prometheus, Grafana e Alertmanager
 scripts/            simulador de tráfego (os scripts Bash chegam na Etapa 2)
 tests/              testes com pytest
-docs/img/           prints do Grafana e do Prometheus (a adicionar)
+docs/img/           prints do Grafana, do Prometheus e do Alertmanager
 Dockerfile          imagem da API (treina o modelo na build)
 docker-compose.yml  API + Prometheus + Grafana + Alertmanager
 .env.example        modelo do .env (senha do Grafana)
@@ -192,6 +204,14 @@ Definidos em `monitoring/prometheus/alerts.yml`. O Prometheus coleta e avalia as
 O `for` é o tempo contínuo que a expressão precisa ficar verdadeira: o alerta passa por *pending* e só vira *firing* depois dele. Por isso o disparo acontece sempre depois do cruzamento do limiar (veja Resultados).
 
 **Inibição** (`monitoring/alertmanager/alertmanager.yml`): `DriftCritico` inibe `DriftAlto`, então só o crítico fica ativo no Alertmanager. O agrupamento é por `alertname`.
+
+![Alertmanager com a caixa Inhibited marcada, listando DriftAlto e DriftCritico](docs/img/alertmanager-inibicao.png)
+
+*Alertmanager com a caixa `Inhibited` marcada (e `Silenced` desmarcada): `DriftAlto` (warning, desde 18:19:34Z) aparece com o marcador `Inhibited` e `DriftCritico` (critical, desde 18:20:04Z) aparece ativo.*
+
+![Prometheus com DriftAlto e DriftCritico em firing](docs/img/prometheus-alertas.png)
+
+*Prometheus com 2 alertas em `firing` e nenhum em `pending` (3 inativos): `DriftAlto` (regra `anomaly_api_drift_score_max > 0.5`, valor 1,584, `Active Since` 18:58:14Z) e `DriftCritico` (regra `anomaly_api_drift_score_max > 1`, valor 1,584, `Active Since` 18:58:39Z). `TaxaAnomaliaAlta` aparece com 0 ativos.*
 
 **Limiares:** foram calibrados com tráfego normal sintético (5% de anomalias), em que o drift basal máximo medido foi 0,226 (calibração) e 0,170 (rodada de Resultados). Não há garantia de que valham para dados reais.
 
