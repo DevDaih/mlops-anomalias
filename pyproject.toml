@@ -18,6 +18,8 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# Notebook exportado do Kaggle (código gerado/executado lá); não passa pelo lint
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B"]

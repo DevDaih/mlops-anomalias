@@ -374,6 +374,25 @@ https://huggingface.co/DevDaih/mlops-anomalias-isolation-forest
 
 O modelo treinado (formato skops, dados sintéticos) está publicado no Hub; a API continua sem depender de nenhum serviço externo em execução, e o Hub só recebe o modelo já treinado.
 
+## Notebook: o mesmo método em dados reais
+
+- Versão para executar no Kaggle: https://www.kaggle.com/code/devdaih/isolationforest-em-fraude-de-cart-o-mlops-anomali
+- No repositório: [`notebooks/isolationforest-em-fraude-de-cart-o-mlops-anomali.ipynb`](notebooks/isolationforest-em-fraude-de-cart-o-mlops-anomali.ipynb)
+
+O notebook aplica o mesmo método do projeto (IsolationForest, com os rótulos usados só na avaliação) ao dataset real [Credit Card Fraud Detection](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) (ULB, Kaggle). Métricas medidas no conjunto de teste, ao lado das do projeto sintético:
+
+| Métrica | Sintético (projeto) | Real (notebook) |
+|---|---|---|
+| Precisão | 0,935 | 0,2465 |
+| Recall | 0,960 | 0,2365 |
+| F1 | 0,947 | 0,2414 |
+| ROC-AUC | 0,9996 | 0,9460 |
+| PR-AUC | não medido | 0,1374 |
+
+Os cenários **não são comparáveis**: a tabela mostra só o que o mesmo método faz em cada problema.
+
+O notebook foi executado no Kaggle (o CSV é lido de `/kaggle/input/...`). O dataset **não está no repositório**. A licença (ODbL para o banco de dados, DbCL para o conteúdo) e a citação dos autores estão na primeira célula de texto do notebook.
+
 ## Próximas etapas
 
 - **Feito (Etapa 2, parte 1):** CI em `.github/workflows/ci.yml`, em push e pull_request: ruff (check e format), pytest, promtool e amtool, `docker compose config`, build da imagem da API e teste do container (`/health` e `/predict`); o push no GHCR (tags `latest` e SHA curto) só acontece em push na `main`.
