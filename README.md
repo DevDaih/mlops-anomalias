@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml/badge.svg)](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml)
 
-Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas e, nas próximas etapas, pipeline de CI/CD com retreino agendado e portão de qualidade.
+Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas e, CI/CD (feito) e, nas próximas etapas, retreino agendado com portão de qualidade.
 
 Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem nenhum provedor de IA externo e sem custo.
 
@@ -119,6 +119,16 @@ O compose se recusa a subir se `GF_SECURITY_ADMIN_PASSWORD` não estiver definid
 | Alertmanager | 9093  | http://localhost:9093    |
 
 No Codespaces, acesse pela aba **Ports**. No Grafana, entre com o usuário `admin` e a senha do `.env`; acesso anônimo e cadastro estão desligados. O datasource (`uid: prometheus`) e o dashboard **Saúde do Modelo** são provisionados automaticamente.
+
+### Usar a imagem publicada
+
+O CI publica a imagem da API no GHCR a cada push na `main`:
+
+```bash
+docker pull ghcr.io/devdaih/mlops-anomalias:latest
+```
+
+O CI só verifica que o container dessa imagem sobe, responde `/health` e classifica um registro normal em `/predict`. A imagem contém apenas a API; Prometheus, Grafana e Alertmanager continuam vindo do `docker compose`. Se o pacote estiver privado no GHCR, o pull exige `docker login ghcr.io`.
 
 ### Treinar um novo modelo
 
@@ -360,9 +370,10 @@ ALERTS{alertstate="firing"}
 
 ## Próximas etapas
 
-- **Etapa 2:** CI com GitHub Actions (testes, lint e build da imagem publicada no GHCR), retreino agendado com portão de qualidade que só promove um novo modelo se o F1 não piorar, infraestrutura como código com Terraform (provider Docker) e scripts Bash de teste pós-deploy e relatório diário de saúde do modelo.
+- **Feito (Etapa 2, parte 1):** CI em `.github/workflows/ci.yml`, em push e pull_request: ruff (check e format), pytest, promtool e amtool, `docker compose config`, build da imagem da API e teste do container (`/health` e `/predict`); o push no GHCR (tags `latest` e SHA curto) só acontece em push na `main`.
+- **Etapa 2 (falta):** retreino agendado com portão de qualidade que só promove um novo modelo se o F1 não piorar, infraestrutura como código com Terraform (provider Docker) e scripts Bash de teste pós-deploy e relatório diário de saúde do modelo.
 - **Etapa 3 (opcional):** implantação num cluster kind com Helm e registro dos experimentos no MLflow.
 
 ## Tecnologias
 
-Python, scikit-learn, FastAPI, Prometheus, Grafana, Alertmanager, Docker e Docker Compose. Nas próximas etapas: GitHub Actions, Terraform, Bash, Kubernetes (kind), Helm e MLflow.
+Python, scikit-learn, FastAPI, Prometheus, Grafana, Alertmanager, Docker, Docker Compose, GitHub Actions e GHCR. Nas próximas etapas: Terraform, Bash, Kubernetes (kind), Helm e MLflow.
