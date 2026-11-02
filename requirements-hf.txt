@@ -1,0 +1,7 @@
+# Dependências SÓ da exportação para o Hugging Face Hub (scripts/exportar_hf.py).
+# Ficam fora do requirements.txt: a imagem da API não precisa delas.
+# Versões que instalaram e funcionaram com scikit-learn 1.9.1 em 2026-11-02;
+# só as diretas estão fixadas.
+-r requirements.txt
+skops==0.16.0
+huggingface_hub==2.4.0

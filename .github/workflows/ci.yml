@@ -27,9 +27,10 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             requirements-dev.txt
+            requirements-hf.txt
 
       - name: Instalar dependências
-        run: pip install -r requirements-dev.txt
+        run: pip install -r requirements-dev.txt -r requirements-hf.txt
 
       - name: ruff check
         run: ruff check .

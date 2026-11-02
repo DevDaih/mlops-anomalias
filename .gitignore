@@ -227,3 +227,6 @@ models/*.joblib
 models/*.json
 !models/.gitkeep
 *.tmp
+
+# Exportação para o Hugging Face Hub (gerada por scripts/exportar_hf.py)
+hf_export/

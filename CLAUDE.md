@@ -7,7 +7,9 @@ SINTÉTICOS com anomalias conhecidas, servido por FastAPI, com monitoramento
 qualidade e infraestrutura como código (Terraform, provider Docker).
 
 ## Restrições
-- Sem OpenAI e sem qualquer provedor de IA externo. Tudo roda local e de graça.
+- Sem OpenAI e sem qualquer provedor de IA externo (a API nunca chama serviço
+  externo; a única exceção é publicar o modelo no Hugging Face, veja a seção
+  Hugging Face). Tudo roda local e de graça.
 - Máquina de 2 núcleos e pouca RAM: imagens slim, nada pesado.
 - Treino precisa levar segundos.
 - Dados são sempre sintéticos e isso deve estar dito no README.
@@ -29,3 +31,9 @@ qualidade e infraestrutura como código (Terraform, provider Docker).
 - Antes de editar muitos arquivos, apresente um plano curto.
 - Ao terminar uma tarefa: rode ruff e pytest e mostre o resultado.
 - Nunca commitar segredos.
+
+## Hugging Face
+Exceção à regra de "sem provedor externo": é permitido PUBLICAR o modelo
+treinado no Hugging Face Hub (scripts/exportar_hf.py --push), usando HF_TOKEN
+do ambiente. A API continua sem depender de nenhum serviço externo em
+execução, e o token nunca vai para o repositório nem para a imagem Docker.
