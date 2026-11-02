@@ -4,7 +4,7 @@
 
 Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas, CI/CD (feito) e, nas próximas etapas, retreino agendado com portão de qualidade.
 
-Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem nenhum provedor de IA externo e sem custo.
+Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem custo e sem que a API dependa de nenhum provedor de IA ou serviço externo em execução. A única exceção é opcional e fora da API: o modelo já treinado pode ser publicado no Hugging Face Hub (veja [Modelo no Hugging Face](#modelo-no-hugging-face)).
 
 As dependências diretas estão fixadas com `==` em `requirements.txt` (runtime) e `requirements-dev.txt` (testes e lint); com elas, o treino com seed 42 reproduz as métricas da v1 (precisão 0,935, recall 0,960, F1 0,947, ROC-AUC 0,9996).
 
@@ -367,6 +367,12 @@ ALERTS{alertstate="firing"}
 - **A janela é por processo (1 worker).** Com mais de um worker, cada um teria a sua janela de drift e de `anomaly_ratio` e o Prometheus veria um deles a cada scrape.
 - **Latência do servidor subestima a sobrecarga.** A 40 req/s o histograma deu p95 de 940 ms e o cliente mediu 4965 ms; o histograma só conta o tempo dentro da aplicação, não a fila antes dela (não investiguei a causa exata dessa fila).
 - **Escopo das medições.** Uma execução por fase, simulador e API na mesma máquina de 2 núcleos, tempos de disparo com resolução de 5 s e tráfego 100% sintético.
+
+## Modelo no Hugging Face
+
+https://huggingface.co/DevDaih/mlops-anomalias-isolation-forest
+
+O modelo treinado (formato skops, dados sintéticos) está publicado no Hub; a API continua sem depender de nenhum serviço externo em execução, e o Hub só recebe o modelo já treinado.
 
 ## Próximas etapas
 
