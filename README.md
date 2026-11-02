@@ -1,8 +1,12 @@
 # Detecção de Anomalias como Serviço: mini plataforma de MLOps
 
+[![CI](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml/badge.svg)](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml)
+
 Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas e, nas próximas etapas, pipeline de CI/CD com retreino agendado e portão de qualidade.
 
 Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem nenhum provedor de IA externo e sem custo.
+
+As dependências diretas estão fixadas com `==` em `requirements.txt` (runtime) e `requirements-dev.txt` (testes e lint); com elas, o treino com seed 42 reproduz as métricas da v1 (precisão 0,935, recall 0,960, F1 0,947, ROC-AUC 0,9996).
 
 > ⚠️ **Aviso sobre os dados**
 > Todos os dados deste projeto são **sintéticos**, gerados por código em `src/anomalias/data.py`. Eles simulam leituras de sensores industriais (`temperature` em °C, `pressure` em bar, `vibration` em mm/s e `current` em A) com anomalias injetadas de forma controlada. Como os rótulos das anomalias são conhecidos, é possível medir a qualidade do modelo, mas os números refletem esse cenário simulado, **não um ambiente de produção real**.
@@ -349,7 +353,7 @@ ALERTS{alertstate="firing"}
 - **Nenhum alerta cobre uma API que parou de responder `/predict`** (Achado 7), e não há limite de concorrência nem proteção contra sobrecarga no servidor.
 - **Limiares calibrados em dados sintéticos.** Os valores (0,5, 1,0, 0,15, 200 ms) saíram do tráfego simulado com 5% de anomalias; em dados reais seria preciso recalibrar.
 - **O ROC-AUC de ~0,9996 não indica desempenho real.** Reflete um problema sintético fácil, com anomalias injetadas bem afastadas dos dados normais; precisão, recall e F1 valem só para esse cenário.
-- **Reprodutibilidade da imagem parcial.** A seed é fixa, mas as dependências em `requirements.txt` não têm versão fixada e o build reaproveita a camada de treino do cache (o `created_at` do modelo da rodada era do dia anterior ao build). Uma versão nova do scikit-learn pode mudar o modelo e as métricas.
+- **Reprodutibilidade da imagem parcial.** Passou a ser fixa a versão das dependências *diretas* (scikit-learn, numpy, joblib, fastapi, uvicorn, prometheus-client, pydantic; e pytest, httpx e ruff no dev) e a seed do treino; com elas, o treino na build reproduziu as métricas da v1. Continua sem ser fixo: (1) as dependências *transitivas* (starlette, scipy, anyio e os extras de `uvicorn[standard]`) são resolvidas pelo pip a cada build, sem lockfile com hashes; (2) a imagem base `python:3.11-slim` é uma tag móvel, sem digest fixado, então o Python e as bibliotecas do sistema podem mudar; (3) o build reaproveita cache de camada, e uma camada de treino em cache pode ter `created_at` anterior ao build (na rodada de medição, do dia anterior); (4) as imagens do CI (`ubuntu-latest`, actions em tags de versão maior) também não são imutáveis.
 - **A janela é por processo (1 worker).** Com mais de um worker, cada um teria a sua janela de drift e de `anomaly_ratio` e o Prometheus veria um deles a cada scrape.
 - **Latência do servidor subestima a sobrecarga.** A 40 req/s o histograma deu p95 de 940 ms e o cliente mediu 4965 ms; o histograma só conta o tempo dentro da aplicação, não a fila antes dela (não investiguei a causa exata dessa fila).
 - **Escopo das medições.** Uma execução por fase, simulador e API na mesma máquina de 2 núcleos, tempos de disparo com resolução de 5 s e tráfego 100% sintético.

@@ -1,9 +1,11 @@
 # Dependências de RUNTIME (o que a imagem da API instala). Para desenvolvimento
 # e testes use requirements-dev.txt.
-scikit-learn
-numpy
-joblib
-fastapi
-uvicorn[standard]
-prometheus-client
-pydantic
+# Versões fixas (as que rodavam na imagem da API em 2026-11-02). Só as dependências
+# diretas estão fixadas; as transitivas (starlette, scipy etc.) são resolvidas pelo pip.
+scikit-learn==1.9.1
+numpy==2.4.6
+joblib==1.6.0
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+prometheus-client==0.26.0
+pydantic==2.14.2

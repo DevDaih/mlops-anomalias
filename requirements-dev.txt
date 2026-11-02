@@ -1,5 +1,5 @@
 # Desenvolvimento, testes e simulador de tráfego (o CI deve instalar este arquivo)
 -r requirements.txt
-pytest
-httpx
-ruff
+pytest==9.2.0
+httpx==0.28.1
+ruff==0.17.3
