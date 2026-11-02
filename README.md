@@ -92,6 +92,8 @@ docker-compose.yml  API + Prometheus + Grafana + Alertmanager
 .env.example        modelo do .env (senha do Grafana)
 ```
 
+Para uma explicação detalhada do código e da arquitetura (dados, treino, API, monitoramento, alertas, CI/CD e o que ainda não existe), veja [docs/ARQUITETURA.md](docs/ARQUITETURA.md).
+
 ## Como rodar
 
 ### Pré-requisitos
@@ -377,7 +379,7 @@ O modelo treinado (formato skops, dados sintéticos) está publicado no Hub; a A
 ## Notebook: o mesmo método em dados reais
 
 - Versão para executar no Kaggle: https://www.kaggle.com/code/devdaih/isolationforest-em-fraude-de-cart-o-mlops-anomali
-- No repositório: [`notebooks/isolationforest-em-fraude-de-cart-o-mlops-anomali.ipynb`](notebooks/isolationforest-em-fraude-de-cart-o-mlops-anomali.ipynb)
+- No repositório: [`notebooks/fraude_isolation_forest.ipynb`](notebooks/fraude_isolation_forest.ipynb)
 
 O notebook aplica o mesmo método do projeto (IsolationForest, com os rótulos usados só na avaliação) ao dataset real [Credit Card Fraud Detection](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) (ULB, Kaggle). Métricas medidas no conjunto de teste, ao lado das do projeto sintético:
 
