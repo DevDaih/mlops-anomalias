@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml/badge.svg)](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml)
 
-Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas e, CI/CD (feito) e, nas próximas etapas, retreino agendado com portão de qualidade.
+Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas, CI/CD (feito) e, nas próximas etapas, retreino agendado com portão de qualidade.
 
 Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem nenhum provedor de IA externo e sem custo.
 
