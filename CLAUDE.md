@@ -21,8 +21,8 @@ qualidade e infraestrutura como código (Terraform, provider Docker).
 - monitoring/        prometheus/, grafana/ (provisioning), alertmanager/
 - scripts/           bash e simulador de tráfego
 - tests/             pytest
-- infra/terraform/   Etapa 2
-- .github/workflows/ Etapa 2
+- infra/terraform/   ideia futura, ainda não existe
+- .github/workflows/ CI existe (ci.yml)
 
 ## Convenções
 - Python 3.11, type hints, ruff para lint, pytest para testes.

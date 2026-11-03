@@ -438,7 +438,7 @@ Resumo; os detalhes e os números estão na seção [Limitações do README](../
 
 ### Não implementado
 
-Itens que **não existem** no repositório, mesmo que o README os cite como próximas etapas:
+Itens que **não existem** no repositório, mesmo que o README os cite como próximas ideias:
 
 - **Retreino agendado** e **portão de qualidade** (promover um modelo só se o F1 não piorar). O que existe são as peças de base: `activate=False` em `save_model` e `--no-activate` na CLI de treino.
 - **Infraestrutura como código com Terraform** (provider Docker). Não há `infra/` no repositório.

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml/badge.svg)](https://github.com/devdaih/mlops-anomalias/actions/workflows/ci.yml)
 
-Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas, CI/CD (feito) e, nas próximas etapas, retreino agendado com portão de qualidade.
+Plataforma de MLOps de ponta a ponta construída em torno de um modelo leve de detecção de anomalias. O foco não é o modelo em si, e sim o que uma equipe de MLOps constrói ao redor dele: treino reprodutível, versionamento, serviço via API, monitoramento de desempenho e de desvio dos dados (drift), alertas, CI e publicação da imagem.
 
 Tudo roda localmente, inclusive num GitHub Codespace de 2 núcleos, sem custo e sem que a API dependa de nenhum provedor de IA ou serviço externo em execução. A única exceção é opcional e fora da API: o modelo já treinado pode ser publicado no Hugging Face Hub (veja [Modelo no Hugging Face](#modelo-no-hugging-face)).
 
@@ -84,7 +84,7 @@ src/anomalias/      geração de dados, treino, versionamento e cálculo de drif
 api/                API FastAPI e métricas Prometheus
 models/             artefatos versionados (model_vN.joblib + model_vN.json)
 monitoring/         configuração do Prometheus, Grafana e Alertmanager
-scripts/            simulador de tráfego (os scripts Bash chegam na Etapa 2)
+scripts/            simulador de tráfego e exportação para o Hugging Face
 tests/              testes com pytest
 docs/img/           prints do Grafana, do Prometheus e do Alertmanager
 Dockerfile          imagem da API (treina o modelo na build)
@@ -395,12 +395,15 @@ Os cenários **não são comparáveis**: a tabela mostra só o que o mesmo méto
 
 O notebook foi executado no Kaggle (o CSV é lido de `/kaggle/input/...`). O dataset **não está no repositório**. A licença (ODbL para o banco de dados, DbCL para o conteúdo) e a citação dos autores estão na primeira célula de texto do notebook.
 
-## Próximas etapas
+## Próximas ideias
 
-- **Feito (Etapa 2, parte 1):** CI em `.github/workflows/ci.yml`, em push e pull_request: ruff (check e format), pytest, promtool e amtool, `docker compose config`, build da imagem da API e teste do container (`/health` e `/predict`); o push no GHCR (tags `latest` e SHA curto) só acontece em push na `main`.
-- **Etapa 2 (falta):** retreino agendado com portão de qualidade que só promove um novo modelo se o F1 não piorar, infraestrutura como código com Terraform (provider Docker) e scripts Bash de teste pós-deploy e relatório diário de saúde do modelo.
-- **Etapa 3 (opcional):** implantação num cluster kind com Helm e registro dos experimentos no MLflow.
+O projeto já cobre treino, API, monitoramento, alertas, CI e a publicação do modelo. Estas são ideias para continuar, e nenhuma está implementada:
+
+- Retreino agendado com portão de qualidade, que só promove um modelo novo se o F1 não piorar. Antes disso, a API precisaria recarregar o modelo sem reiniciar.
+- Um alerta para API que parou de responder e um limite de concorrência, a partir do que os testes de carga mostraram.
+- Terraform (provider Docker) e scripts Bash de teste pós-deploy.
+- Rodar em Kubernetes (kind e Helm) e registrar os experimentos no MLflow.
 
 ## Tecnologias
 
-Python, scikit-learn, FastAPI, Prometheus, Grafana, Alertmanager, Docker, Docker Compose, GitHub Actions e GHCR. Nas próximas etapas: Terraform, Bash, Kubernetes (kind), Helm e MLflow.
+Python, scikit-learn, FastAPI, Prometheus, Grafana, Alertmanager, Docker, Docker Compose, GitHub Actions e GHCR. Ideias futuras: Terraform, Bash, Kubernetes (kind), Helm e MLflow.
